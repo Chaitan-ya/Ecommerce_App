@@ -1,98 +1,122 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from 'react';
+import { 
+  View, 
+  StyleSheet, 
+  SafeAreaView, 
+  Platform, 
+  StatusBar 
+} from 'react-native';
+import { AppProvider, useApp } from '../context/AppContext';
+import { HomeScreen } from '../screens/HomeScreen';
+import { CartScreen } from '../screens/CartScreen';
+import { MyOrdersScreen } from '../screens/MyOrdersScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
+import { ProductListingModal } from '../screens/ProductListingModal';
+import { ProductDetailsModal } from '../screens/ProductDetailsModal';
+import { AddressModal } from '../screens/AddressModal';
+import { CheckoutScreen } from '../screens/CheckoutScreen';
+import { PaymentScreen } from '../screens/PaymentScreen';
+import { PaymentSuccessScreen } from '../screens/PaymentSuccessScreen';
+import { OrderTrackingScreen } from '../screens/OrderTrackingScreen';
+import { LoginScreen } from '../screens/LoginScreen';
+import { BottomNavBar } from '../components/BottomNavBar';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+function AppContent() {
+  const { activeTab, activeModal, isLoggedIn } = useApp();
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+  // Determine what screen to display
+  const renderScreen = () => {
+    // If not logged in and user requested login modal
+    if (activeModal === 'login') {
+      return <LoginScreen />;
+    }
+
+    // Modal full screens
+    switch (activeModal) {
+      case 'product-listing':
+        return <ProductListingModal />;
+      case 'product-details':
+        return <ProductDetailsModal />;
+      case 'address-select':
+        return <AddressModal />;
+      case 'checkout':
+        return <CheckoutScreen />;
+      case 'payment':
+        return <PaymentScreen />;
+      case 'payment-success':
+        return <PaymentSuccessScreen />;
+      case 'order-tracking':
+        return <OrderTrackingScreen />;
+      default:
+        break;
+    }
+
+    // Main Tab Screens
+    switch (activeTab) {
+      case 'home':
+        return <HomeScreen />;
+      case 'cart':
+        return <CartScreen />;
+      case 'orders':
+        return <MyOrdersScreen />;
+      case 'profile':
+        return <ProfileScreen />;
+      default:
+        return <HomeScreen />;
+    }
+  };
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <View style={styles.appShell}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.mobileContainer}>
+          <View style={styles.screenBody}>
+            {renderScreen()}
+          </View>
+          <BottomNavBar />
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
-export default function HomeScreen() {
+export default function App() {
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  appShell: {
     flex: 1,
+    backgroundColor: '#0F172A', // Dark elegant backdrop on desktop
+    alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
+    width: '100%',
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  mobileContainer: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    width: '100%',
+    maxWidth: 480, // High-end mobile device frame width on web
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 25,
+    elevation: 10,
+    borderLeftWidth: Platform.OS === 'web' ? 1 : 0,
+    borderRightWidth: Platform.OS === 'web' ? 1 : 0,
+    borderColor: '#334155',
   },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  screenBody: {
+    flex: 1,
   },
 });
